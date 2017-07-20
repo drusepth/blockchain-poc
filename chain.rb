@@ -32,7 +32,7 @@ class Block
   def self.mine_next_block(last_block)
     this_index = last_block.index + 1
     this_timestamp = Time.now.strftime("%Y-%m-%d %H:%M:%S.%6N")
-    this_data = "Hey! I'm a block" + this_index.to_s
+    this_data = "Block data for index " + this_index.to_s
     this_hash = last_block.hash
 
     Block.new(this_index, this_timestamp, this_data, this_hash)
@@ -70,6 +70,6 @@ while true
     #puts "Retrying with new hash: #{block_to_add.hash}"
   end
 
-  puts "Block #{block_to_add.index} has been added to blockchain!"
+  puts "Block #{block_to_add.index} has been added to this blockchain!"
   puts "Hash: #{block_to_add.hash}\n"
 end
