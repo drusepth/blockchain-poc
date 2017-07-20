@@ -1,5 +1,6 @@
-require "rubygems"
-require "digest"
+require 'rubygems'
+require 'digest'
+require 'pry'
 
 class Block
   attr_accessor :index, :timestamp, :data, :previous_hash, :hash
@@ -19,6 +20,11 @@ class Block
     sha.hexdigest
   end
 
+  def rehash!
+    self.timestamp = Time.now.strftime("%Y-%m-%d %H:%M:%S.%6N")
+    self.hash = hash_block
+  end
+
   def self.genesis_block
     Block.new(0, Time.now.strftime("%Y-%m-%d %H:%M:%S.%6N"), "Genesis Block", 0)
   end
@@ -28,6 +34,7 @@ class Block
     this_timestamp = Time.now.strftime("%Y-%m-%d %H:%M:%S.%6N")
     this_data = "Hey! I'm a block" + this_index.to_s
     this_hash = last_block.hash
+
     Block.new(this_index, this_timestamp, this_data, this_hash)
   end
 end
@@ -38,12 +45,31 @@ class Blockchain
   def initialize
     self.blocks = [Block.genesis_block]
   end
+
+  # Simple string comparison between two hashes, e.g. 0a0 < 1b5 < 1c0 < 1c5 < 535 etc
+  def self.better_hash? existing_hash, challenging_hash
+    challenging_hash.to_s < existing_hash.to_s
+  end
+
+  def add(block)
+    if Blockchain.better_hash?(self.blocks.last.hash, block.hash)
+      self.blocks.push block
+      true
+    else
+      false
+    end
+  end
 end
 
 blockchain = Blockchain.new
 while true
   block_to_add = Block.mine_next_block(blockchain.blocks.last)
-  blockchain.blocks.push block_to_add
+
+  until blockchain.add(block_to_add)
+    block_to_add.rehash!
+    #puts "Retrying with new hash: #{block_to_add.hash}"
+  end
+
   puts "Block #{block_to_add.index} has been added to blockchain!"
   puts "Hash: #{block_to_add.hash}\n"
 end
